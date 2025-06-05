@@ -1,18 +1,30 @@
-let handler = async (m, { conn, text, isROwner, isOwner }) => {
+/* Código Hecho Por WillZek para CrowBot
+- Tienen Que Definir El despMessage también en el _welcome.js o no funcionará 
+- también tienen que agregar ${despMessage} en el mensaje de bienvenida, eso sí, las comillas son `
+- Espero Les Funcione uwu 
+*/
 
-if (text) {
-global.db.data.chats[m.chat].sBye = text
-conn.reply(m.chat, `*LA DESPEDIDA DEL GRUPO HA SIDO CONFIGURADA*`, m)  
+let handler = async (m, { conn, text, isRowner }) => {
+  if (!text) {
+    return m.reply('🍭 Ingresa Un Mensaje Para La Despedida!\n> Ejemplo: `.setdespedida ¡Se fue😹!`');
+  }
 
-} else {
-    conn.reply(m.chat, `*_ESCRIBA EL MENSAJE DE DESPEDIDA_*\n*_OPCIONAL PUEDE USAR LO QUE ESTA CON "@" PARA AGREGAR MÁS INFORMACIÓN:_*\n\n*⚡ @user (Mención al usuario(a))*\n\n*RECUERDE QUE EL "@" ES OPCIONAL*`, m)
-}
-}
+  const despMessage = text.trim();
 
-handler.help = ['setbye @user + texto']
-handler.tags = ['group']
-handler.command = ['setbye', 'despedida'] 
-handler.botAdmin = true
-handler.admin = true
-handler.group = true
-export default handler
+  try {
+    global.db.data.chats[m.chat].despMessage = despMessage;
+
+    m.reply(`🍭 El mensaje de despedida del grupo ahora : ${despMessage}`);
+  } catch (error) {
+    console.error(error);
+    m.reply('🍭 Hubo un error al intentar cambiar el mensaje de despedida.');
+  }
+};
+
+handler.help = ['setdespedida *<mensaje>*'];
+handler.tags = ['grupo'];
+handler.command = ['setdespedida', 'setdesp'];
+handler.admin = true;
+handler.group = true;
+
+export default handler;
