@@ -1,53 +1,36 @@
-
-import { WAMessageStubType } from "@whiskeysockets/baileys";
-import fetch from "node-fetch";
+import { WAMessageStubType } from '@whiskeysockets/baileys'
+import fetch from 'node-fetch'
 
 export async function before(m, { conn, participants, groupMetadata }) {
-  try {
-    if (!m.messageStubType || !m.isGroup) return true;
+  if (!m.messageStubType || !m.isGroup) return true
 
-    let ppUrl = await conn.profilePictureUrl(m.messageStubParameters[0], "image").catch(
-      () => "https://qu.ax/iVZTn.jpg"
-    );
-    let imgBuffer = await fetch(ppUrl).then(res => res.buffer()).catch(() => null);
+  let who = m.messageStubParameters[0]
+  let taguser = `@${who.split('@')[0]}`
+  let chat = global.db.data.chats[m.chat]
+  let defaultImage = 'https://cdnmega.vercel.app/media/gsw1gLhC@ew68pKDxFue1JI_z7IgeAiR61Swwz5QS0aChvcZM9CI';
 
-    let chat = global.db?.data?.chats?.[m.chat];
-    if (!chat) return true;
-
-    const botName = "🔥 Barboza Bot 🔥";
-    const user = `@${m.messageStubParameters[0].split("@")[0]}`;
-    const groupName = groupMetadata.subject;
-    const groupDesc = groupMetadata.desc || "🌎 Sin descripción";
-
-    // 🎉 Bienvenida
-    if (chat.bienvenida && m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_ADD) {
-      const welcomeText = `🎊 *¡Bienvenido, ${user}!* 🎊\n✨ *Has entrado a* ${groupName}.\n📢 *Descripción:* ${groupDesc}\n🚀 *Disfruta tu estancia y sigue las reglas!*`;
-
-      await conn.sendMessage(m.chat, { 
-        image: imgBuffer, 
-        caption: welcomeText, 
-        mentions: [m.messageStubParameters[0]] 
-      });
+  if (chat.welcome) {
+    let img;
+    try {
+      let pp = await conn.profilePictureUrl(who, 'image');
+      img = await (await fetch(pp)).buffer();
+    } catch {
+      img = await (await fetch(defaultImage)).buffer();
     }
-    if (chat.bienvenida && m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_LEAVE) {
-      const goodbyeText = `👋 *${user} ha decidido salir del grupo.*\n✨ *Esperamos verte nuevamente en* ${groupName}!`;
 
-      await conn.sendMessage(m.chat, { 
-        image: imgBuffer, 
-        caption: goodbyeText, 
-        mentions: [m.messageStubParameters[0]] 
-      });
-    }
-    if (chat.bienvenida && m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_REMOVE) {
-      const kickText = `🚨 *${user} ha sido expulsado del grupo!* 🚨\n❌ *Eliminado de* ${groupName}.\n⚡ *Sigue las normas para evitar futuras sanciones.*`;
+  const welcomeMessage = global.db.data.chats[m.chat]?.welcomeMessage || 'Bienvenido/a :';
 
-      await conn.sendMessage(m.chat, { 
-        image: imgBuffer, 
-        caption: kickText, 
-        mentions: [m.messageStubParameters[0]] 
-      });
+    if (m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_ADD) {
+    let bienvenida = `┏╼★${textbot}\n┋「 Bienvenido 」\n┗╼★ 「 @${m.messageStubParameters[0].split`@`[0]} 」\n ┋❖ ${welcomeMessage}\n ┋❀  ${groupMetadata.subject}\n ┗━━━━━━━━━━━━━━━┅ ⳹\n> ✐ Puedes usar *#profile* para ver tu perfil.`
+      await conn.sendMessage(m.chat, { image: img, caption: bienvenida, mentions: [who] }, { quoted: estilo })
+    } else if (m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_REMOVE || m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_LEAVE) {
+
+const despMessage = global.db.data.chats[m.chat]?.despMessage || 'Se Fue😹';
+
+     let bye = `┏╼★${textbot}\n┋「 ADIOS 👋 」\n┗╼★ 「 @${m.messageStubParameters[0].split`@`[0]} 」\n ┋❖ ${despMessage}\n ┋❀ Jamás te quisimos aquí\n ┗━━━━━━━━━━━━━━━┅ ⳹\n> ${dev}`
+      await conn.sendMessage(m.chat, { image: img, caption: bye, mentions: [who] }, { quoted: estilo })
     }
-  } catch (error) {
-    console.error("❌ Error en bienvenida/despedida:", error);
   }
+
+  return true
 }
